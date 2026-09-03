@@ -3,6 +3,7 @@
 <p align="center">
   <img src="assets/dolphin_bookshelf_cartoon.jpg" alt="A cartoon dolphin in front of a bookshelf, busy at a keyboard" width="480" />
 </p>
+
 English | [中文](README.zh.md)
 
 The **MySQL storage backend** for the DeepSeek Harness storage hub
@@ -16,13 +17,14 @@ KV units into MySQL (InnoDB ACID, crash-safe, cross-process visible).
 ```ts
 import { apply, Config, inject, name } from '@sandersyao/dsh-storage-mysql'
 // Route the storage-domain facility to this backend:
-//   ctx.plugin({ apply, Config, inject, name }, { connection: { tablePrefix: 'dsh_stor_' } })
+//   ctx.plugin({ apply, Config, inject, name }, { connection: { tablePrefix: 'dsh_storage_' } })
 // With storage-domain config { backend: 'mysql' }, ctx.storage.domain is MySQL-backed.
 ```
 
 Easiest path is the bundle patch (see below): add the package and its
-`cordis.patch.yml` disables the default `storage-json`, points
-`storage-domain.backend` at `mysql`, and inserts this backend.
+`cordis.patch.yml` keeps the default `storage-json` backend and simply points
+`storage-domain.backend` at `mysql` — the json backend stays available for
+per-domain `routes`.
 
 ## Guides
 

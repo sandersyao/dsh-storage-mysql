@@ -3,6 +3,7 @@
 <p align="center">
   <img src="assets/dolphin_bookshelf_cartoon.jpg" alt="A cartoon dolphin in front of a bookshelf, busy at a keyboard" width="480" />
 </p>
+
 [English](README.md) | 中文
 
 DeepSeek Harness（dsh）存储中心（`ctx.storage`）的 **MySQL 存储后端** —— 内置
@@ -15,12 +16,13 @@ MySQL（InnoDB ACID：崩溃安全、跨进程可见）。
 ```ts
 import { apply, Config, inject, name } from '@sandersyao/dsh-storage-mysql'
 // 把 storage-domain facility 路由到本后端：
-//   ctx.plugin({ apply, Config, inject, name }, { connection: { tablePrefix: 'dsh_stor_' } })
+//   ctx.plugin({ apply, Config, inject, name }, { connection: { tablePrefix: 'dsh_storage_' } })
 // storage-domain 配置 { backend: 'mysql' } 后，ctx.storage.domain 即由 MySQL 承载。
 ```
 
-最简做法是走组合包 patch：`dsh plugin add` 后 `cordis.patch.yml` 自动停用
-默认 `storage-json`、把 `storage-domain.backend` 指向 `mysql`、并插入本后端。
+最简做法是走组合包 patch：`dsh plugin add` 后 `cordis.patch.yml` 保留默认
+`storage-json` 后端、把 `storage-domain.backend` 指向 `mysql`（json 后端仍可经
+`routes` 按域使用）、并插入本后端。
 
 ## 指引
 

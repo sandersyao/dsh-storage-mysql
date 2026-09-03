@@ -5,9 +5,9 @@
 本包是 dsh 组合包（`package.json` 声明 `dsh.bundle`，`cordis.patch.yml` 为
 配置层）。`dsh plugin add` 后 patch 自动应用：
 
-1. 停用默认 `storage-json`；
-2. 把 `storage-domain.config.backend` 改为 `mysql`（所有 domain 默认路由到 MySQL）；
-3. 插入本后端 `storage-mysql`（默认前缀 `dsh_stor_`）。
+1. 保留默认 `storage-json` 后端（可经 `storage-domain.routes` 按域继续使用）；
+2. 把 `storage-domain.config.backend` 改为 `mysql`（默认 domain 路由到 MySQL）；
+3. 插入本后端 `storage-mysql`（默认前缀 `dsh_storage_`）。
 
 ## 2. 环境变量
 

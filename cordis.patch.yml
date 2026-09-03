@@ -1,4 +1,4 @@
-# dsh 组合包 patch 层：用 MySQL 存储后端替换默认 json 文件后端。
+# dsh 组合包 patch 层：保留默认 json 后端，把域层默认路由切到 MySQL 存储后端。
 # 当用户 `dsh plugin add @sandersyao/dsh-storage-mysql` 后，
 # 该文件作为本 bundle 的配置层被应用到 profile。
 #
@@ -10,9 +10,6 @@
 # - `insert:` 追加新行；`name` 是包名，loader 用其默认导出构造插件。
 # - `config` 可选；主机/库/凭据由环境变量 `STORAGE_*`（回退 `MYSQL_*`）提供，
 #   `connection.tablePrefix` 可在此覆盖 env 的 `STORAGE_TABLE_PREFIX`。
-- id: storage-json
-  disabled: true
-
 - id: storage-domain
   config:
     backend: mysql
@@ -22,4 +19,4 @@
       name: '@sandersyao/dsh-storage-mysql'
       config:
         connection:
-          tablePrefix: dsh_stor_
+          tablePrefix: dsh_storage_
