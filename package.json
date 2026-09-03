@@ -1,0 +1,88 @@
+{
+  "name": "@sandersyao/dsh-storage-mysql",
+  "version": "0.1.0",
+  "description": "MySQL-backed storage backend for the DeepSeek Harness storage hub (ctx.storage)",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "author": "姚晓威 <sanders.yao@gmail.com>",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./config": {
+      "types": "./lib/config.d.ts",
+      "default": "./lib/config.js"
+    },
+    "./schema": {
+      "types": "./lib/schema.d.ts",
+      "default": "./lib/schema.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/*.js",
+    "lib/*.d.ts",
+    "cordis.patch.yml"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sandersyao/dsh-storage-mysql.git"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-invariants": "^0.1.1-rc.2",
+    "@deepseek-ai/dsh-storage": "^0.1.1-rc.2",
+    "@deepseek-ai/cordis": "^4.0.1"
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": "^3.18.1",
+    "dotenv": "^16.4.0",
+    "mysql2": "^3.24.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.0",
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-invariants": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-storage": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-storage-domain": "0.1.1-rc.2",
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "execa": "^9.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "scripts": {
+    "build": "tsup",
+    "prepublishOnly": "pnpm build",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "fmt": "biome format --write .",
+    "test": "vitest run",
+    "test:unit": "vitest run test/unit",
+    "test:integration": "vitest run test/integration",
+    "test:e2e": "vitest run test/e2e",
+    "test:coverage": "vitest run --coverage",
+    "smoke": "node scripts/manual-smoke.mjs"
+  }
+}

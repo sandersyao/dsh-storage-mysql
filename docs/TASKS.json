@@ -1,0 +1,12 @@
+{
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "首版 MySQL 存储后端（done）"
+    },
+    {
+      "id": "T2",
+      "title": "发布 npm 前的清理与 publish 工作流（pending）"
+    }
+  ]
+}

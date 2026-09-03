@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "id": "DEBT-1",
+      "title": "record_key ≤255 假设",
+      "area": "schema",
+      "status": "open"
+    },
+    {
+      "id": "DEBT-2",
+      "title": "TLS 强制未启用",
+      "area": "config",
+      "status": "open"
+    },
+    {
+      "id": "DEBT-3",
+      "title": "无读从库",
+      "area": "pool",
+      "status": "open"
+    },
+    {
+      "id": "DEBT-4",
+      "title": "无内存写缓冲",
+      "area": "backend",
+      "status": "open"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "T1",
+  "title": "首版 MySQL 存储后端",
+  "status": "done",
+  "checks": [
+    "typecheck pass",
+    "lint pass",
+    "build pass",
+    "unit+integration+e2e pass (35)",
+    "coverage lines>=90"
+  ],
+  "files": [
+    "src/{index,backend,unit,config,schema,pool,invariant}.ts",
+    "test/**",
+    "cordis.patch.yml",
+    "docs/*"
+  ]
+}
