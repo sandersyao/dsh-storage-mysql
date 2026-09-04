@@ -10,10 +10,12 @@ interface RecordRow extends RowDataPacket {
   readonly value_json: string;
 }
 
-/** 读取全局行的内部形状（units 表）。 */
+/** 读取全局行的内部形状（units 表）。revision 供 setGlobal CAS 使用。 */
 interface UnitRow extends RowDataPacket {
   readonly unit_name: string;
   readonly version: number;
+  /** 全局单例乐观锁计数器（loadAll 只读 subset，不访问该字段）。 */
+  readonly revision: number;
   readonly global_json: string | null;
 }
 
@@ -152,26 +154,63 @@ export class MysqlKvUnit implements KvUnit {
   }
 
   /**
-   * 写入全局单例。
+   * 写入全局单例，使用基于 revision 的乐观锁 CAS，保证跨节点并发安全。
+   *
+   * 机制：读当前 `revision` → 条件
+   * `UPDATE units SET global_json=?, revision=revision+1 WHERE unit_name=? AND
+   * revision=?`；仅当读到的 revision 仍是最新时才写成功并自增，否则（被其他
+   * 节点抢先写）`affectedRows=0`，重读重试（上限 MAX_CAS_RETRIES）。
+   *
+   * 与格式 version 的关系：CAS 自增的是独立的 `revision` 乐观锁列，`version`
+   * 仅存 descriptor 格式版本且永不因写值而变，故单元写过多轮全局后仍能以原
+   * descriptor 重开（崩溃恢复契约不变）。
+   *
+   * 注意：本方法接收调用方算好的**完整值**，不负责"读-改-写合并"——并发下两个
+   * 调用方各自基于旧快照算出的完整值仍可能互相覆盖。CAS 的责任是把"静默覆盖
+   * 丢失"转化为"可控冲突"（affectedRows=0 → 冲突方重读重试或失败），使域层
+   * （如 workspace 的 operationTail 串行链 + pendingMutation 恢复机制）有机会
+   * 检测并重算。跨节点并发安全因此由"后端 CAS + 域层既有恢复"共同保证，而非
+   * 后端单独兜底。
+   *
+   * 关于重试耗尽抛错类型：上游 @deepseek-ai/dsh-storage 的 StorageErrorCode 联合
+   * 不含 'cas-exhausted'（合法值为 backend-not-found | form-not-mounted |
+   * duplicate-backend | duplicate-mount | version-mismatch | malformed-medium |
+   * closed），也不应为此改发布依赖的 .d.ts。CAS 重试耗尽是"可预期的并发冲突"
+   * 而非存储层配置/介质错误，故用普通 Error（消息含 cas-exhausted 标记）抛出，
+   * 由域层决定重试或失败。
+   *
    * @param value - 不透明 JSON 值。
    * @returns 写入 durable 后解析。
    */
-  setGlobal(value: unknown): Promise<void> {
+  async setGlobal(value: unknown): Promise<void> {
     this.assertOpen();
     if (!this.descriptor.hasGlobal) {
       throw new Error(`unit '${this.descriptor.name}' does not declare a global slot`);
     }
     const text = toJsonText(`unit '${this.descriptor.name}' global`, value);
-    // unit 行由 open 保证存在，这里仍用 upsert 兜底以保证单元名+版本完整。
-    const sql = `INSERT INTO \`${this.names.units}\`
-      (unit_name, version, global_json)
-      VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE global_json = VALUES(global_json)`;
-    return this.track(
-      this.pool
-        .query<ResultSetHeader>(sql, [this.descriptor.name, this.descriptor.version, text])
-        .then(() => undefined),
-    );
+    const MAX_CAS_RETRIES = 16;
+    // 整段 CAS 作为一个在途写登记，保证 close() 能排空（与 putRecord/deleteRecord
+    // 经 track() 的语义一致），避免 close 排空时漏掉本次写。
+    const write = async (): Promise<void> => {
+      for (let attempt = 0; attempt < MAX_CAS_RETRIES; attempt++) {
+        const [rows] = await this.pool.query<UnitRow[]>(
+          `SELECT revision FROM \`${this.names.units}\` WHERE unit_name = ?`,
+          [this.descriptor.name],
+        );
+        const current = rows[0]?.revision ?? 0;
+        const [result] = await this.pool.query<ResultSetHeader>(
+          `UPDATE \`${this.names.units}\`
+           SET global_json = ?, revision = revision + 1
+           WHERE unit_name = ? AND revision = ?`,
+          [text, this.descriptor.name, current],
+        );
+        if (result.affectedRows === 1) return;
+      }
+      throw new Error(
+        `unit '${this.descriptor.name}' setGlobal cas-exhausted：乐观锁重试耗尽（持续并发写冲突，可重试）`,
+      );
+    };
+    return this.track(write());
   }
 
   /**

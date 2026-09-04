@@ -1,7 +1,7 @@
 import type { Pool, RowDataPacket } from "mysql2/promise";
 
 /** 当前关系结构 schema 版本号。递增代表一次结构变更（需新增迁移）。 */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 /**
  * 表前缀合法字符集：仅允许字母、数字、下划线，防止标识符注入。
@@ -14,7 +14,7 @@ export const TABLE_PREFIX_PATTERN = /^[A-Za-z0-9_]+$/;
  * 插件同库同前缀也不冲突。
  */
 export interface TableNames {
-  /** 存储单元表（单元名 → 版本与全局单例）。 */
+  /** 存储单元表（单元名 → 格式版本 / revision 乐观锁 / 全局单例）。 */
   readonly units: string;
   /** 存储记录表（unit+table+key → JSON 值）。 */
   readonly records: string;
@@ -57,7 +57,8 @@ export function tableNames(prefix: string): TableNames {
 export function unitsDdl(name: string): string {
   return `CREATE TABLE IF NOT EXISTS \`${name}\` (
   unit_name    VARCHAR(255) NOT NULL COMMENT '域/单元名（与 UNIT_NAME_RE 匹配）。仅参数化绑定，绝不作 SQL 标识符拼接',
-  version      INT NOT NULL COMMENT '单元格式版本号（descriptor.version）；打开时校验，不匹配抛 version-mismatch',
+  version      INT NOT NULL COMMENT '单元格式版本号（descriptor.version）；打开时校验，不匹配抛 version-mismatch。仅在首次建行时写入一次，永不因写值而变',
+  revision     INT NOT NULL DEFAULT 0 COMMENT '全局单例乐观锁计数器：每次 setGlobal 成功即自增；供跨节点写 CAS 检测并发，与格式 version 解耦（故重开仍可用同一 descriptor）',
   global_json  LONGTEXT NULL COMMENT '全局单例的 JSON（未写过=NULL，作为 "never written" 哨兵；域层禁止 null 全局，故 null 不会与合法值混淆）',
   created_at   BIGINT NOT NULL DEFAULT (UNIX_TIMESTAMP() * 1000) COMMENT '首次建行时间（epoch 毫秒）',
   PRIMARY KEY (unit_name)
@@ -121,7 +122,7 @@ export async function ensureSchema(
   const expected = options.expectedVersion ?? SCHEMA_VERSION;
   const names = tableNames(prefix);
 
-  // 幂等建表（IF NOT EXISTS）。
+  // 幂等建表（IF NOT EXISTS）：新库直接以最新 DDL 建出全部列。
   await pool.query(metaDdl(names.meta));
   await pool.query(unitsDdl(names.units));
   await pool.query(recordsDdl(names.records));
@@ -137,9 +138,51 @@ export async function ensureSchema(
   }
   if (applied === expected) return;
 
-  // applied < expected：需要迁移。
+  // applied < expected：需要迁移。存量库由 ensureSchema 建表无法改形，须按版本步进补列。
   if (!options.autoMigrate) {
     throw new Error(`schema 版本落后：已应用 ${applied}，期望 ${expected}，且禁止自动迁移。`);
   }
+  await applyMigrations(pool, names, applied, expected);
   await pool.query(`INSERT INTO \`${names.meta}\` (version) VALUES (?)`, [expected]);
+}
+
+/**
+ * 按版本步进应用结构迁移（from+1..to）。当前仅 v2 需要：为存量 units 表补充
+ * revision 乐观锁列。新库由最新 unitsDdl 直接建出该列，此处在列已存在时跳过，
+ * 保证迁移幂等。
+ * @param pool - 用于执行 DDL 的写连接池。
+ * @param names - 表名集合。
+ * @param from - 已应用版本（不含）。
+ * @param to - 目标版本（含）。
+ */
+async function applyMigrations(
+  pool: Pool,
+  names: TableNames,
+  from: number,
+  to: number,
+): Promise<void> {
+  for (let v = from + 1; v <= to; v++) {
+    if (v === 2) await ensureUnitsRevisionColumn(pool, names.units);
+  }
+}
+
+/**
+ * 若 units 表缺失 revision 列则补列（MySQL 8 无 ADD COLUMN IF NOT EXISTS，
+ * 故先查 information_schema 再决定是否 ALTER）。幂等。
+ * @param pool - 用于执行 DDL 的写连接池。
+ * @param unitsTable - units 表名。
+ */
+async function ensureUnitsRevisionColumn(pool: Pool, unitsTable: string): Promise<void> {
+  const [cols] = await pool.query<RowDataPacket[]>(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = 'revision'`,
+    [unitsTable],
+  );
+  if (cols.length > 0) return;
+  await pool.query(
+    `ALTER TABLE \`${unitsTable}\`
+      ADD COLUMN revision INT NOT NULL DEFAULT 0
+      COMMENT '全局单例乐观锁计数器：每次 setGlobal 成功即自增；供跨节点写 CAS 检测并发，与格式 version 解耦'
+      AFTER version`,
+  );
 }

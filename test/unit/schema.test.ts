@@ -30,6 +30,7 @@ describe("schema.DDL", () => {
     const ddl = unitsDdl("u");
     expect(ddl).toContain("COMMENT '");
     expect(ddl).toContain("global_json");
+    expect(ddl).toContain("revision");
     expect(ddl).toContain("PRIMARY KEY (unit_name)");
     expect(ddl).toContain("IF NOT EXISTS");
   });
@@ -46,7 +47,7 @@ describe("schema.DDL", () => {
     expect(ddl).toContain("PRIMARY KEY (version)");
   });
 
-  it("SCHEMA_VERSION 为 1", () => {
-    expect(SCHEMA_VERSION).toBe(1);
+  it("SCHEMA_VERSION 为 2（新增 revision 乐观锁列）", () => {
+    expect(SCHEMA_VERSION).toBe(2);
   });
 });
