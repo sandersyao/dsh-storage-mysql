@@ -12,6 +12,21 @@ The **MySQL storage backend** for the DeepSeek Harness storage hub
 `mysql` backend on `ctx.storage.backend`, exposes the `kv` facet, and persists
 KV units into MySQL (InnoDB ACID, crash-safe, cross-process visible).
 
+## Companion plugins (distributed dsh deployment)
+
+This backend is one of a four-plugin set for a **distributed dsh deployment** on a
+shared MySQL. `dsh-storage-mysql` (this repo), `dsh-credentials-mysql`, and
+`dsh-session-persistence-mysql` switch the default storage / credentials /
+session-persistence backends to shared MySQL, while `dsh-workspace-bootstrap`
+declaratively seeds a default workspace so the first session can start on an
+empty database.
+
+| Plugin | GitHub repository | npm package page |
+| --- | --- | --- |
+| `@sandersyao/dsh-workspace-bootstrap` | https://github.com/sandersyao/dsh-workspace-bootstrap | https://www.npmjs.com/package/@sandersyao/dsh-workspace-bootstrap |
+| `@sandersyao/dsh-credentials-mysql` | https://github.com/sandersyao/dsh-credentials-mysql | https://www.npmjs.com/package/@sandersyao/dsh-credentials-mysql |
+| `@sandersyao/dsh-session-persistence-mysql` | https://github.com/sandersyao/dsh-session-persistence-mysql | https://www.npmjs.com/package/@sandersyao/dsh-session-persistence-mysql |
+
 ## Install & usage
 
 ```ts

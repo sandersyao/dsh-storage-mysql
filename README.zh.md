@@ -11,6 +11,19 @@ DeepSeek Harness（dsh）存储中心（`ctx.storage`）的 **MySQL 存储后端
 `ctx.storage.backend` 注册 `mysql`、暴露 `kv` facet，把 KV 单元持久化到
 MySQL（InnoDB ACID：崩溃安全、跨进程可见）。
 
+## 配套插件（分布式 dsh 部署）
+
+本后端是**分布式 dsh 部署**四件套之一：`dsh-storage-mysql`（本仓库） /
+`dsh-credentials-mysql` / `dsh-session-persistence-mysql` 把默认存储、凭据、
+会话持久化后端切到共享 MySQL；`dsh-workspace-bootstrap` 则在空库启动时声明式
+自举一个默认工作区，让首会话可开始。
+
+| 插件 | GitHub 仓库 | npm 包页面 |
+| --- | --- | --- |
+| `@sandersyao/dsh-workspace-bootstrap` | https://github.com/sandersyao/dsh-workspace-bootstrap | https://www.npmjs.com/package/@sandersyao/dsh-workspace-bootstrap |
+| `@sandersyao/dsh-credentials-mysql` | https://github.com/sandersyao/dsh-credentials-mysql | https://www.npmjs.com/package/@sandersyao/dsh-credentials-mysql |
+| `@sandersyao/dsh-session-persistence-mysql` | https://github.com/sandersyao/dsh-session-persistence-mysql | https://www.npmjs.com/package/@sandersyao/dsh-session-persistence-mysql |
+
 ## 安装与使用
 
 ```ts
