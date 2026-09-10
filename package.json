@@ -1,6 +1,6 @@
 {
   "name": "@sandersyao/dsh-storage-mysql",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MySQL-backed storage backend for the DeepSeek Harness storage hub (ctx.storage)",
   "type": "module",
   "main": "lib/index.js",
