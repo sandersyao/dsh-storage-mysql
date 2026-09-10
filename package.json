@@ -44,8 +44,8 @@
     "url": "git+https://github.com/sandersyao/dsh-storage-mysql.git"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-invariants": "^0.1.2-rc.1",
-    "@deepseek-ai/dsh-storage": "^0.1.2-rc.1",
+    "@deepseek-ai/dsh-invariants": "^0.1.5-rc.1",
+    "@deepseek-ai/dsh-storage": "^0.1.5-rc.1",
     "@deepseek-ai/cordis": "^4.0.1"
   },
   "dependencies": {
@@ -56,8 +56,8 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-invariants": "0.1.2-rc.1",
-    "@deepseek-ai/dsh-storage": "0.1.2-rc.1",
+    "@deepseek-ai/dsh-invariants": "0.1.5-rc.1",
+    "@deepseek-ai/dsh-storage": "0.1.5-rc.1",
     "@types/node": "^22.0.0",
     "@vitest/coverage-v8": "^2.1.0",
     "execa": "^9.0.0",
