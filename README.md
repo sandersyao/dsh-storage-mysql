@@ -46,6 +46,22 @@ per-domain `routes`.
 - **Try it in a dsh profile without touching existing json storage** — `docs/DSH_PROFILE_TRIAL.md`.
 - **Production / npm install & `cordis.patch.yml` integration (replace the default backend)** — `docs/DEPLOYMENT.md`.
 
+## Compatibility
+
+This release targets `@deepseek-ai/dsh-storage@0.2.1-rc.2` and
+`@deepseek-ai/cordis@4.0.5` (`~4.0.5` peer range). The storage contract used by
+this backend remains the public `StorageBackend` / `KvFacet` / `KvUnit` API:
+`storageBackendServiceKey('mysql')`, descriptor version checks, `StorageError`,
+and `UNIT_NAME_RE` remain the intended integration points for this backend. The
+published package metadata retains the default entry point used by the E2E
+fixture, but runtime/typecheck verification is still required locally.
+The package declares `@deepseek-ai/dsh-invariants: ^0.2.0-rc.2` as its
+consumer-facing peer range. The local dev dependency and lockfile still use
+`0.1.5-rc.1`; they must be upgraded and verified separately before claiming a
+fully aligned local toolchain. The companion invariant plugin only injects the
+`invariants` service and registers this package; it does not depend on
+version-specific invariant symbols.
+
 ## Configuration
 
 Connection details come from environment variables / a `.env` file (see

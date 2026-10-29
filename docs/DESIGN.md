@@ -6,7 +6,19 @@
 `@deepseek-ai/dsh-storage-json` 后端的**契约等价**替代：把 KV 单元持久化到
 MySQL，与 json 后端可互换，但天然支持跨进程共享与崩溃一致（InnoDB ACID）。
 
-## 架构要点
+## 兼容性基线
+
+本仓库当前适配 `@deepseek-ai/dsh-storage@0.2.1-rc.2`，并将 Cordis
+对齐到 `4.0.5`（满足上游 `~4.0.5` peer 范围）。实现继续依赖公开的
+`StorageBackend`、`KvFacet`、`KvUnit`、`KvUnitDescriptor`、`StorageError`、
+`UNIT_NAME_RE` 与 `storageBackendServiceKey` 契约；`ctx.storage.backend.register`
+和 `ctx.provide(storageBackendServiceKey("mysql"), backend)` 的生命周期关系不变。
+
+本包对消费者声明 `@deepseek-ai/dsh-invariants: ^0.2.0-rc.2`；当前本地
+devDependency 与锁文件仍解析到 `0.1.5-rc.1`，因此目标版本的安装和兼容性验证
+仍待执行。`src/invariant.ts` 只注入 `invariants` 服务并注册本包的空 invariant，
+没有依赖版本专属符号。依赖升级不改变 MySQL 表结构、已提交数据的持久化语义或
+`cordis.patch.yml` 的插件路由意图。
 
 - 插件为**函数式后端**：导出 `name/inject/Config/apply`；以 `mysql` 名注册
   到 `ctx.storage.backend`，暴露 `kv` facet，并 `ctx.provide(

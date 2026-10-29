@@ -42,6 +42,19 @@ import { apply, Config, inject, name } from '@sandersyao/dsh-storage-mysql'
 - **独立 dsh profile 试用，不影响现有 json 存储** —— `docs/DSH_PROFILE_TRIAL.md`。
 - **生产 / npm 安装与 `cordis.patch.yml` 集成（替换默认后端）** —— `docs/DEPLOYMENT.md`。
 
+## 兼容版本
+
+本版本目标为 `@deepseek-ai/dsh-storage@0.2.1-rc.2` 与
+`@deepseek-ai/cordis@4.0.5`（peer 范围为 `~4.0.5`）。本后端继续使用公开的
+`StorageBackend` / `KvFacet` / `KvUnit` 契约：`storageBackendServiceKey('mysql')`、
+描述符版本校验、`StorageError`、`UNIT_NAME_RE` 以及默认 `Storage` 插件集成方式
+仍是本后端的预期集成入口。发布元数据仍保留 E2E fixture 使用的默认入口，
+但本地仍需完成运行时和类型检查验证。本包对消费者声明的
+`@deepseek-ai/dsh-invariants` peer 范围为
+`^0.2.0-rc.2`。本地 devDependency 与锁文件目前仍使用 `0.1.5-rc.1`，需要
+单独升级并验证后，才能声称本地工具链已完全对齐。伴生 invariant 插件只注入
+`invariants` 服务并注册本包，不依赖版本专属的 invariant 符号。
+
 ## 配置
 
 连接参数来自环境变量 / `.env`（见 `.env.example`）。**独立 `STORAGE_*` 优先，

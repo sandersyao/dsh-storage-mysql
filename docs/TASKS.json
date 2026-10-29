@@ -7,6 +7,10 @@
     {
       "id": "T2",
       "title": "发布 npm 前的清理与 publish 工作流（pending）"
+    },
+    {
+      "id": "T3",
+      "title": "适配 dsh 0.2.1-rc.2（blocked，待本地验证）"
     }
   ]
 }
